@@ -72,7 +72,7 @@
         android:id="@+id/membersTitleTextView"
         android:layout_width="0dp"
         android:layout_height="24dp"
-        android:background="@color/stream_ui_background_alabaster"
+        android:background="@color/stream_ui_background_white_snow"
         android:gravity="start|center_vertical"
         android:paddingHorizontal="@dimen/spacing_small"
         android:textColor="@color/stream_ui_text_color_light"

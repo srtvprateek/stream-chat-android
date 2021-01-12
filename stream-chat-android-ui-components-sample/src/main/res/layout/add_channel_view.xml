@@ -38,7 +38,7 @@
         android:id="@+id/createGroupContainer"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:background="@color/stream_ui_background_alabaster_black"
+        android:background="@color/stream_ui_white_snow"
         android:clipToPadding="false"
         android:gravity="start|center_vertical"
         android:orientation="horizontal"

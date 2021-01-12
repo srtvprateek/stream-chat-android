@@ -33,7 +33,7 @@ internal class MessageListViewStyle(context: Context, attrs: AttributeSet?) {
                 )
                 .scrollButtonRippleColor(
                     R.styleable.MessageListView_streamUiScrollButtonRippleColor,
-                    context.getColorCompat(R.color.stream_ui_grey_light)
+                    context.getColorCompat(R.color.stream_ui_white_snow)
                 )
                 .scrollButtonBadgeColor(
                     R.styleable.MessageListView_streamUiScrollButtonBadgeColor,
