@@ -13,7 +13,7 @@ internal object DtoTestData {
     val downstreamJson =
         """{
           "attachments" : [],
-          "cid": "cid",
+          "cid": "",
           "created_at": "2020-06-10T11:04:31.0Z",
           "html": "",
           "i18n": {},
