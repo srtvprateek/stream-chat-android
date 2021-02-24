@@ -2,9 +2,11 @@ package io.getstream.chat.android.livedata.controller
 
 import androidx.lifecycle.LiveData
 import io.getstream.chat.android.client.api.models.QuerySort
-import io.getstream.chat.android.client.models.Channel
 import io.getstream.chat.android.client.utils.FilterObject
 import io.getstream.chat.android.livedata.ChatDomainImpl
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import io.getstream.chat.android.client.models.Channel as Channel
 
 /**
  * The QueryChannelsController is a small helper to show a list of channels
@@ -62,6 +64,8 @@ public interface QueryChannelsController {
      * If we are currently loading more channels
      */
     public val loadingMore: LiveData<Boolean>
+
+    public val channelStateFlow: StateFlow<List<Channel>>
 
     public sealed class ChannelsState {
         /** The QueryChannelsController is initialized but no query is currently running.

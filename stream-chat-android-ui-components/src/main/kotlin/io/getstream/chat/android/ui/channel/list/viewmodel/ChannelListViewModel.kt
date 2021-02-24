@@ -1,6 +1,7 @@
 package io.getstream.chat.android.ui.channel.list.viewmodel
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.Transformations.map
@@ -15,6 +16,7 @@ import io.getstream.chat.android.client.utils.FilterObject
 import io.getstream.chat.android.core.internal.exhaustive
 import io.getstream.chat.android.livedata.ChatDomain
 import io.getstream.chat.android.livedata.controller.QueryChannelsController
+import kotlinx.coroutines.flow.collect
 
 /**
  * ViewModel class for [io.getstream.chat.android.ui.channel.list.ChannelListView].
@@ -49,23 +51,30 @@ public class ChannelListViewModel(
             val currentState = stateMerger.value!!
             if (queryChannelsControllerResult.isSuccess) {
                 val queryChannelsController = queryChannelsControllerResult.data()
-                stateMerger.addSource(
-                    map(queryChannelsController.channelsState) { channelState ->
-                        when (channelState) {
-                            is QueryChannelsController.ChannelsState.NoQueryActive,
-                            is QueryChannelsController.ChannelsState.Loading,
-                            -> currentState.copy(isLoading = true)
-                            is QueryChannelsController.ChannelsState.OfflineNoResults -> currentState.copy(
-                                isLoading = false,
-                                channels = emptyList(),
-                            )
-                            is QueryChannelsController.ChannelsState.Result -> currentState.copy(
-                                isLoading = false,
-                                channels = channelState.channels.filterNot { it.hidden == true || it.isDraft },
-                            )
-                        }
+                // stateMerger.addSource(
+                //     map(queryChannelsController.channelsState) { channelState ->
+                //         when (channelState) {
+                //             is QueryChannelsController.ChannelsState.NoQueryActive,
+                //             is QueryChannelsController.ChannelsState.Loading,
+                //             -> currentState.copy(isLoading = true)
+                //             is QueryChannelsController.ChannelsState.OfflineNoResults -> currentState.copy(
+                //                 isLoading = false,
+                //                 channels = emptyList(),
+                //             )
+                //             is QueryChannelsController.ChannelsState.Result -> currentState.copy(
+                //                 isLoading = false,
+                //                 channels = channelState.channels.filterNot { it.hidden == true || it.isDraft },
+                //             )
+                //         }
+                //     }
+                // ) { state -> stateMerger.value = state }
+                stateMerger.addSource(queryChannelsController.channelStateFlow.asLiveData()) {
+                    stateMerger.value = if (it.isEmpty()) {
+                        currentState.copy(channels = it)
+                    } else {
+                        currentState.copy(isLoading = false, channels = it)
                     }
-                ) { state -> stateMerger.value = state }
+                }
                 paginationStateMerger.addSource(queryChannelsController.loadingMore) { loadingMore ->
                     setPaginationState { copy(loadingMore = loadingMore) }
                 }

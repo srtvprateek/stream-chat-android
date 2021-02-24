@@ -7,6 +7,9 @@ import io.getstream.chat.android.client.models.Message
 import io.getstream.chat.android.client.models.User
 import io.getstream.chat.android.livedata.repository.domain.channel.member.toEntity
 import io.getstream.chat.android.livedata.repository.domain.channel.member.toModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import java.util.Date
 
 internal interface ChannelRepository {
@@ -21,6 +24,7 @@ internal interface ChannelRepository {
     suspend fun setHiddenForChannel(cid: String, hidden: Boolean)
     suspend fun selectMembersForChannel(cid: String): List<Member>
     suspend fun updateMembersForChannel(cid: String, members: List<Member>)
+    fun selectAllChannels(): Flow<List<Channel>>
 }
 
 internal class ChannelRepositoryImpl(
@@ -96,6 +100,13 @@ internal class ChannelRepositoryImpl(
                 channelDao.insert(updatedChannel)
             }
     }
+
+    override fun selectAllChannels(): Flow<List<Channel>> =
+        channelDao.selectAllChannelEntity().mapLatest { channelsList ->
+            channelsList.map { channelEntity ->
+                channelEntity.toModel(getUser, getMessage)
+            }
+        }
 
     private fun updateCache(channels: Collection<Channel>) {
         for (channel in channels) {

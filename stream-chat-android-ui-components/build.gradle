@@ -93,6 +93,7 @@ dependencies {
     implementation Dependencies.coilGif
     implementation Dependencies.coilVideo
     implementation Dependencies.androidxStartup
+    implementation Dependencies.androidxLifecycleLiveDataKtx
 
     // Tests
     testImplementation project(":stream-chat-android-test")

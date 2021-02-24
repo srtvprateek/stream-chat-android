@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import io.getstream.chat.android.client.utils.SyncStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.util.Date
 
 @Dao
@@ -44,4 +46,7 @@ internal interface ChannelDao {
 
     @Query("UPDATE stream_chat_channel_state SET hidden = :hidden WHERE cid = :cid")
     suspend fun setHidden(cid: String, hidden: Boolean)
+
+    @Query("SELECT * from stream_chat_channel_state")
+    fun selectAllChannelEntity(): Flow<List<ChannelEntity>>
 }

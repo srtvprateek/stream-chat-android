@@ -20,6 +20,7 @@ import io.getstream.chat.android.livedata.model.ChannelConfig
 import io.getstream.chat.android.livedata.request.QueryChannelsPaginationRequest
 import io.getstream.chat.android.livedata.request.toQueryChannelsRequest
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +50,11 @@ internal class QueryChannelsControllerImpl(
     override val endOfChannels: LiveData<Boolean> = _endOfChannels.asLiveData()
 
     private val _channels = MutableStateFlow<Map<String, Channel>>(emptyMap())
+
+    override val channelStateFlow: StateFlow<List<Channel>> =
+        domainImpl.repos.selectAllChannels()
+            .map { it.sortedWith(sort.comparator) }
+            .stateIn(domainImpl.scope, SharingStarted.Eagerly, emptyList())
 
     private val _sortedChannels = _channels.filterNotNull()
         .map { it.values.sortedWith(sort.comparator) }.stateIn(domainImpl.scope, SharingStarted.Eagerly, emptyList())

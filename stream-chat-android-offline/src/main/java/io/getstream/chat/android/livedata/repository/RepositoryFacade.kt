@@ -20,6 +20,9 @@ import io.getstream.chat.android.livedata.request.isRequestingMoreThanLastMessag
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 
 internal class RepositoryFacade constructor(
     userRepository: UserRepository,
@@ -60,6 +63,9 @@ internal class RepositoryFacade constructor(
 
         return channels.onEach { it.enrichChannel(messagesMap, defaultConfig) }
     }
+
+    override fun selectAllChannels(): Flow<List<Channel>> =
+        channelsRepository.selectAllChannels().mapLatest { it.onEach { it.enrichChannel(emptyMap(), defaultConfig) } }
 
     @VisibleForTesting
     internal fun Channel.enrichChannel(messageMap: Map<String, List<Message>>, defaultConfig: Config) {
