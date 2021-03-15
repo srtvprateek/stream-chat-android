@@ -1,11 +1,16 @@
 package io.getstream.chat.android.livedata.repository
 
+import androidx.collection.LruCache
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import io.getstream.chat.android.client.api.models.Pagination
+import io.getstream.chat.android.client.models.Message
 import io.getstream.chat.android.livedata.randomMessage
 import io.getstream.chat.android.livedata.randomMessageEntity
 import io.getstream.chat.android.livedata.randomUser
@@ -19,38 +24,48 @@ import kotlinx.coroutines.test.runBlockingTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyList
+import org.mockito.ArgumentMatchers.anyString
 import java.util.Date
 
 @ExperimentalCoroutinesApi
 internal class MessageRepositoryTests {
 
     private lateinit var messageDao: MessageDao
-
     private lateinit var sut: MessageRepository
+    private lateinit var cache: LruCache<String, Message>
 
     @BeforeEach
     fun setup() {
         messageDao = mock()
-        sut = MessageRepositoryImpl(messageDao, ::randomUser)
+        cache = mock()
+        sut = MessageRepositoryImpl(messageDao, ::randomUser, 100, cache)
     }
 
     @Test
-    fun `Given 2 messages in cache When select message entities Should return message from dao and cache`() = runBlockingTest {
-        val cachedMessage1 = randomMessage(id = "id1")
-        val cachedMessage2 = randomMessage(id = "id2")
-        sut.insertMessages(listOf(cachedMessage1, cachedMessage2), true)
-        val messageEntityFromDb1 = randomMessageEntity(id = "id3")
-        val messageEntityFromDb2 = randomMessageEntity(id = "id4")
-        whenever(messageDao.select(listOf("id3", "id4"))) doReturn listOf(messageEntityFromDb1, messageEntityFromDb2)
+    fun `Given 2 messages in cache When select message entities Should return message from dao and cache`() =
+        runBlockingTest {
+            val cachedMessage1 = randomMessage(id = "id1")
+            val cachedMessage2 = randomMessage(id = "id2")
 
-        val result = sut.selectMessages(listOf("id1", "id2", "id3", "id4"))
+            val messageEntityFromDb1 = randomMessageEntity(id = "id3")
+            val messageEntityFromDb2 = randomMessageEntity(id = "id4")
 
-        result.size shouldBeEqualTo 4
-        result.any { it.id == "id1" } shouldBeEqualTo true
-        result.any { it.id == "id2" } shouldBeEqualTo true
-        result.any { it.id == "id3" } shouldBeEqualTo true
-        result.any { it.id == "id4" } shouldBeEqualTo true
-    }
+
+            whenever(messageDao.select(listOf("id3", "id4"))) doReturn listOf(messageEntityFromDb1,
+                messageEntityFromDb2)
+
+            whenever(cache[cachedMessage1.id]) doReturn cachedMessage1
+            whenever(cache[cachedMessage2.id]) doReturn cachedMessage2
+
+            val result = sut.selectMessages(listOf("id1", "id2", "id3", "id4"))
+
+            result.size shouldBeEqualTo 4
+            result.any { it.id == "id1" } shouldBeEqualTo true
+            result.any { it.id == "id2" } shouldBeEqualTo true
+            result.any { it.id == "id3" } shouldBeEqualTo true
+            result.any { it.id == "id4" } shouldBeEqualTo true
+        }
 
     @Test
     fun `when selecting messages for channel, correct messages should be requested to DAO`() = runBlockingTest {
@@ -65,7 +80,7 @@ internal class MessageRepositoryTests {
         val requestGreater = AnyChannelPaginationRequest(30).apply {
             messageFilterDirection = Pagination.GREATER_THAN
         }
-        
+
         val requestLessThan = AnyChannelPaginationRequest(30).apply {
             messageFilterDirection = Pagination.LESS_THAN
         }
@@ -95,5 +110,49 @@ internal class MessageRepositoryTests {
             verify(messageDao).messagesForChannelOlderThan(cid, requestLessOrEqualThan.messageLimit, createdAt)
             verify(messageDao).messagesForChannelEqualOrOlderThan(cid, requestLessThan.messageLimit, createdAt)
         }
+    }
+
+    @Test
+    fun `when selecting messages, cache should be requested and updated accordingly`() = runBlockingTest {
+        val messageId1 = randomString()
+        val messageId2 = randomString()
+
+        val messageEntity = randomMessageEntity(id = messageId1)
+
+        whenever(messageDao.select(anyList())) doReturn listOf(messageEntity)
+
+        sut.selectMessages(listOf(messageId1, messageId2))
+
+        // Cache requested are make once.
+        verify(cache)[messageId1]
+        verify(cache)[messageId2]
+
+        // // Cache is updated
+        verify(cache).put(eq(messageId1), argThat { message -> message.id == messageId1 })
+    }
+
+    @Test
+    fun `when a single message is selected, cache should be called`() = runBlockingTest {
+        val messageId1 = randomString()
+
+        val messageEntity = randomMessageEntity(id = messageId1)
+
+        whenever(messageDao.select(anyString())) doReturn messageEntity
+        whenever(cache.get(anyString())) doReturn randomMessage()
+
+        sut.selectMessage(messageId1)
+
+        // Cache requested are make once.
+        verify(cache)[messageId1]
+    }
+
+    @Test
+    fun `when deleting a message, the cache should be also updated`() = runBlockingTest {
+        val message = randomMessage()
+
+        sut.deleteChannelMessage(message)
+
+        verify(cache).remove(message.id)
+        verify(messageDao).deleteMessage(message.cid, message.id)
     }
 }
