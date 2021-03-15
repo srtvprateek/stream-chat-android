@@ -76,7 +76,7 @@ internal class MessageRepositoryImpl(
 
     override suspend fun selectMessage(messageId: String): Message? {
         return messageCache[messageId] ?: messageDao.select(messageId)?.toModel(getUser, ::selectMessage)
-            ?.also { messageCache.put(it.id, it) } 
+            ?.also { messageCache.put(it.id, it) }
     }
 
     override suspend fun insertMessages(messages: List<Message>, cache: Boolean) {
