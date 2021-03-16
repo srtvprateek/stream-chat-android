@@ -11,7 +11,7 @@ import io.getstream.chat.android.ui.common.extensions.internal.getDimension
 import io.getstream.chat.android.ui.common.extensions.internal.getEnum
 import io.getstream.chat.android.ui.common.extensions.internal.use
 
-internal class AvatarStyle internal constructor(context: Context, attrs: AttributeSet?) {
+public class AvatarStyle internal constructor(context: Context, attrs: AttributeSet?) {
     var avatarBorderWidth: Int
         internal set
     var avatarBorderColor: Int

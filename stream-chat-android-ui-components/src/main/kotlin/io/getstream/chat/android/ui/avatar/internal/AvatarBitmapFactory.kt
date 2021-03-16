@@ -13,42 +13,156 @@ import io.getstream.chat.android.client.models.Channel
 import io.getstream.chat.android.client.models.User
 import io.getstream.chat.android.client.models.image
 import io.getstream.chat.android.client.models.initials
+import io.getstream.chat.android.core.internal.coroutines.DispatcherProvider
 import io.getstream.chat.android.ui.R
 import io.getstream.chat.android.ui.avatar.AvatarView.Companion.MAX_AVATAR_SECTIONS
 import io.getstream.chat.android.ui.common.extensions.internal.getIntArray
 import io.getstream.chat.android.ui.common.internal.adjustColorLBrightness
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
-internal class AvatarBitmapFactory(private val context: Context) {
+public open class AvatarBitmapFactory(private val context: Context) {
     private val gradientBaseColors = context.getIntArray(R.array.stream_ui_avatar_gradient_colors)
 
-    internal suspend fun createUserBitmap(
+    //region User avatars
+    internal suspend fun createUserBitmapInternal(
         user: User,
         style: AvatarStyle,
-        @Px avatarSize: Int
+        @Px avatarSize: Int,
     ): Bitmap {
-        return StreamImageLoader.instance().loadAsBitmap(context, user.image)
-            ?: createInitialsBitmap(style, avatarSize, user.initials)
+        val customBitmap = withContext(DispatcherProvider.IO) {
+            createUserBitmapBlocking(user, style, avatarSize)
+        }
+        val bitmap = when (customBitmap) {
+            NOT_IMPLEMENTED_MARKER -> createUserBitmap(user, style, avatarSize)
+            else -> customBitmap
+        }
+
+        // Image loading successful, return the loaded bitmap
+        if (bitmap != null) {
+            return bitmap
+        }
+
+        // Use default, locally generated image instead
+        val customDefaultBitmap = withContext(DispatcherProvider.IO) {
+            createDefaultUserBitmapBlocking(user, style, avatarSize)
+        }
+        return when (customDefaultBitmap) {
+            NOT_IMPLEMENTED_MARKER -> createDefaultUserBitmap(user, style, avatarSize)
+            else -> customDefaultBitmap
+        }
     }
 
-    internal suspend fun createChannelBitmaps(
+    public open fun createUserBitmapBlocking(
+        user: User,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap? {
+        return NOT_IMPLEMENTED_MARKER
+    }
+
+    public open suspend fun createUserBitmap(
+        user: User,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap? {
+        return StreamImageLoader.instance().loadAsBitmap(context, user.image)
+    }
+
+    public open fun createDefaultUserBitmapBlocking(
+        user: User,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap {
+        return NOT_IMPLEMENTED_MARKER
+    }
+
+    public open suspend fun createDefaultUserBitmap(
+        user: User,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap {
+        return createInitialsBitmap(style, avatarSize, user.initials)
+    }
+    //endregion
+
+    //region Channel avatars
+    internal suspend fun createChannelBitmapInternal(
         channel: Channel,
         lastActiveUsers: List<User>,
         style: AvatarStyle,
-        @Px avatarSize: Int
-    ): List<Bitmap> {
-        return StreamImageLoader.instance().loadAsBitmap(context, channel.image)
-            ?.let { listOf(it) }
-            ?: createUsersBitmaps(lastActiveUsers, style, avatarSize).takeUnless { it.isEmpty() }
-            ?: listOf(createInitialsBitmap(style, avatarSize, channel.initials))
+        @Px avatarSize: Int,
+    ): Bitmap {
+        val customBitmap = withContext(DispatcherProvider.IO) {
+            createChannelBitmapBlocking(channel, lastActiveUsers, style, avatarSize)
+        }
+        val bitmap = when (customBitmap) {
+            NOT_IMPLEMENTED_MARKER -> createChannelBitmap(channel, lastActiveUsers, style, avatarSize)
+            else -> customBitmap
+        }
+
+        // Image loading successful, return the loaded bitmap
+        if (bitmap != null) {
+            return bitmap
+        }
+
+        // Use default, locally generated image instead
+        val customDefaultBitmap = withContext(DispatcherProvider.IO) {
+            createDefaultChannelBitmapBlocking(channel, lastActiveUsers, style, avatarSize)
+        }
+        return when (customDefaultBitmap) {
+            NOT_IMPLEMENTED_MARKER -> createDefaultChannelBitmap(channel, lastActiveUsers, style, avatarSize)
+            else -> customDefaultBitmap
+        }
     }
+
+    public open fun createChannelBitmapBlocking(
+        channel: Channel,
+        lastActiveUsers: List<User>,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap? {
+        return NOT_IMPLEMENTED_MARKER
+    }
+
+    public open suspend fun createChannelBitmap(
+        channel: Channel,
+        lastActiveUsers: List<User>,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap? {
+        return StreamImageLoader.instance().loadAsBitmap(context, channel.image)
+            ?: createUsersBitmaps(lastActiveUsers, style, avatarSize).takeIf { it.isNotEmpty() }
+                ?.let {
+                    if (it.size == 1) it[0] else AvatarBitmapCombiner.combine(it, avatarSize)
+                }
+    }
+
+    public open fun createDefaultChannelBitmapBlocking(
+        channel: Channel,
+        lastActiveUsers: List<User>,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap {
+        return NOT_IMPLEMENTED_MARKER
+    }
+
+    public open suspend fun createDefaultChannelBitmap(
+        channel: Channel,
+        lastActiveUsers: List<User>,
+        style: AvatarStyle,
+        @Px avatarSize: Int,
+    ): Bitmap {
+        return createInitialsBitmap(style, avatarSize, channel.initials)
+    }
+    //endregion
 
     private suspend fun createUsersBitmaps(
         users: List<User>,
         style: AvatarStyle,
-        @Px avatarSize: Int
+        @Px avatarSize: Int,
     ): List<Bitmap> {
-        return users.take(MAX_AVATAR_SECTIONS).map { createUserBitmap(it, style, avatarSize) }
+        return users.take(MAX_AVATAR_SECTIONS).map { createUserBitmapInternal(it, style, avatarSize) }
     }
 
     private fun createInitialsBitmap(
@@ -86,7 +200,7 @@ internal class AvatarBitmapFactory(private val context: Context) {
     private fun Canvas.drawInitials(
         avatarStyle: AvatarStyle,
         initials: String,
-        @Px avatarSize: Int
+        @Px avatarSize: Int,
     ) {
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
@@ -120,5 +234,10 @@ internal class AvatarBitmapFactory(private val context: Context) {
     private companion object {
         private const val GRADIENT_DARKER_COLOR_FACTOR = 1.3f
         private const val GRADIENT_LIGHTER_COLOR_FACTOR = 0.7f
+
+        /**
+         * Marker object to detect whether methods have been implemented by custom subclasses.
+         */
+        private val NOT_IMPLEMENTED_MARKER = Bitmap.createBitmap(0, 0, Bitmap.Config.ALPHA_8)
     }
 }

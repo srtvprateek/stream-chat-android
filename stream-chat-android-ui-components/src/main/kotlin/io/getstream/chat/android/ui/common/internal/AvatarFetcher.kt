@@ -13,7 +13,6 @@ import com.getstream.sdk.chat.utils.extensions.getUsers
 import io.getstream.chat.android.client.models.image
 import io.getstream.chat.android.client.models.name
 import io.getstream.chat.android.ui.avatar.internal.Avatar
-import io.getstream.chat.android.ui.avatar.internal.AvatarBitmapCombiner
 import io.getstream.chat.android.ui.avatar.internal.AvatarBitmapFactory
 
 internal class AvatarFetcher(
@@ -30,31 +29,28 @@ internal class AvatarFetcher(
         val resources = options.context.resources
         return when (data) {
             is Avatar.UserAvatar -> {
-                avatarBitmapFactory.createUserBitmap(
+                avatarBitmapFactory.createUserBitmapInternal(
                     data.user,
                     data.avatarStyle,
                     targetSize
-                ).let {
-                    DrawableResult(BitmapDrawable(resources, it), false, DataSource.MEMORY)
+                ).let { bitmap ->
+                    DrawableResult(BitmapDrawable(resources, bitmap), false, DataSource.MEMORY)
                 }
             }
             is Avatar.ChannelAvatar -> {
-                avatarBitmapFactory.createChannelBitmaps(
+                avatarBitmapFactory.createChannelBitmapInternal(
                     data.channel,
                     data.channel.getUsers(),
                     data.avatarStyle,
                     targetSize
-                ).let {
-                    if (it.size == 1) it[0] else AvatarBitmapCombiner.combine(it, targetSize)
-                }.let {
-                    DrawableResult(BitmapDrawable(resources, it), false, DataSource.MEMORY)
+                ).let { bitmap ->
+                    DrawableResult(BitmapDrawable(resources, bitmap), false, DataSource.MEMORY)
                 }
             }
         }
     }
 
-    override fun key(data: Avatar): String? {
-
+    override fun key(data: Avatar): String {
         return when (data) {
             is Avatar.UserAvatar -> {
                 "${data.user.name}${data.user.image}"
