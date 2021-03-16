@@ -53,6 +53,16 @@ public open class AvatarBitmapFactory(private val context: Context) {
         }
     }
 
+    /**
+     * Load a Bitmap with the specified [avatarSize] to represent the [user].
+     *
+     * This method takes precedence over [createUserBitmap] if both are implemented.
+     *
+     * Override this method only if you can't provide a suspending implementation, otherwise
+     * override [createUserBitmap] instead.
+     *
+     * @return The loaded bitmap or null if the loading failed (e.g. network issues).
+     */
     public open fun createUserBitmapBlocking(
         user: User,
         style: AvatarStyle,
@@ -61,6 +71,14 @@ public open class AvatarBitmapFactory(private val context: Context) {
         return NOT_IMPLEMENTED_MARKER
     }
 
+    /**
+     * Load a Bitmap with the specified [avatarSize] to represent the [user], in a suspending operation.
+     *
+     * The [createUserBitmapBlocking] method takes precedence over this one if both are implemented.
+     * Prefer implementing this method if possible.
+     *
+     * @return The loaded bitmap or null if the loading failed (e.g. network issues).
+     */
     public open suspend fun createUserBitmap(
         user: User,
         style: AvatarStyle,
@@ -69,6 +87,17 @@ public open class AvatarBitmapFactory(private val context: Context) {
         return StreamImageLoader.instance().loadAsBitmap(context, user.image)
     }
 
+    /**
+     * Load a default Bitmap with the specified [avatarSize] to represent the [user].
+     * This should be a process that can never fail (e.g. not depend on network).
+     *
+     * This method takes precedence over [createDefaultUserBitmap] if both are implemented.
+     *
+     * Override this method only if you can't provide a suspending implementation, otherwise
+     * override [createDefaultUserBitmap] instead.
+     *
+     * @return The loaded bitmap.
+     */
     public open fun createDefaultUserBitmapBlocking(
         user: User,
         style: AvatarStyle,
@@ -77,6 +106,14 @@ public open class AvatarBitmapFactory(private val context: Context) {
         return NOT_IMPLEMENTED_MARKER
     }
 
+    /**
+     * Load a Bitmap with the specified [avatarSize] to represent the [user], in a suspending operation.
+     *
+     * The [createDefaultUserBitmapBlocking] method takes precedence over this one if both are implemented.
+     * Prefer implementing this method if possible.
+     *
+     * @return The loaded bitmap.
+     */
     public open suspend fun createDefaultUserBitmap(
         user: User,
         style: AvatarStyle,
