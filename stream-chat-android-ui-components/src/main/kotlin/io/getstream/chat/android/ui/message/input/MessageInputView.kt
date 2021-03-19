@@ -21,7 +21,6 @@ import io.getstream.chat.android.ui.message.input.attachment.internal.Attachment
 import io.getstream.chat.android.ui.message.input.attachment.internal.AttachmentSelectionListener
 import io.getstream.chat.android.ui.message.input.attachment.internal.AttachmentSource
 import io.getstream.chat.android.ui.message.input.internal.MessageInputFieldView
-import io.getstream.chat.android.ui.message.input.internal.MessageInputViewStyle
 import io.getstream.chat.android.ui.suggestion.internal.SuggestionListController
 import io.getstream.chat.android.ui.suggestion.list.SuggestionListView
 import java.io.File
