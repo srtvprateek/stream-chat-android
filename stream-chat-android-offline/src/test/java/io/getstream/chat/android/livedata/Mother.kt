@@ -354,7 +354,7 @@ internal fun randomMessage(
 )
 
 internal fun randomChannel(
-    cid: String = randomString(),
+    cid: String = "messaging:${randomString()}",
     id: String = randomString(),
     type: String = randomString(),
     watcherCount: Int = randomInt(),
