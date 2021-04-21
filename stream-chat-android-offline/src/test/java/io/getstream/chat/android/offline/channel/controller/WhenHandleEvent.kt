@@ -1,4 +1,4 @@
-package io.getstream.chat.android.livedata.controller
+package io.getstream.chat.android.offline.channel.controller
 
 import com.google.common.truth.Truth
 import com.nhaarman.mockitokotlin2.any
@@ -29,21 +29,16 @@ import io.getstream.chat.android.livedata.randomTypingStopEvent
 import io.getstream.chat.android.livedata.randomUser
 import io.getstream.chat.android.offline.ChatDomainImpl
 import io.getstream.chat.android.offline.channel.ChannelController
-import io.getstream.chat.android.test.InstantTaskExecutorExtension
 import io.getstream.chat.android.test.randomInt
 import io.getstream.chat.android.test.randomString
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.util.Date
 
-private const val CURRENT_USER_ID = "currentUserId"
-
 @ExperimentalCoroutinesApi
-@ExtendWith(InstantTaskExecutorExtension::class)
-internal class ChannelControllerEventNewTest {
+internal class WhenHandleEvent {
 
     private val channelId = randomString()
     private val currentUser = User(id = CURRENT_USER_ID)
@@ -290,5 +285,9 @@ internal class ChannelControllerEventNewTest {
         val channelFlowValue = channelController.channelData.value
         Truth.assertThat(channelFlowValue.channelId).isEqualTo(channel.id)
         Truth.assertThat(channelFlowValue.deletedAt).isEqualTo(deleteChannelEvent.createdAt)
+    }
+
+    private companion object {
+        private const val CURRENT_USER_ID = "currentUserId"
     }
 }
