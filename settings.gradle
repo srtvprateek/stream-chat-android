@@ -9,6 +9,7 @@ include (
 		':stream-chat-android-core',
 		':stream-chat-android-test',
 		':stream-chat-android-docs',
+		':stream-chat-android-livedata'
 )
 
 buildCache {
