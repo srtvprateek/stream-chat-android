@@ -23,6 +23,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.view.Surface;
 
@@ -54,6 +55,7 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.analytics.AnalyticsCollector;
 import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.audio.AudioListener;
 import com.google.android.exoplayer2.audio.AudioRendererEventListener;
 import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
@@ -166,7 +168,7 @@ public class ExoMediaPlayer implements Player.EventListener {
                 .build();
         player.addListener(this);
         analyticsCollector = new AnalyticsCollector(Clock.DEFAULT);
-        analyticsCollector.setPlayer(player);
+        analyticsCollector.setPlayer(player, Looper.getMainLooper());
         player.addListener(analyticsCollector);
     }
 

@@ -41,11 +41,14 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.decoder.DecoderCounters;
+import com.google.android.exoplayer2.decoder.DecoderReuseEvaluation;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.source.LoadEventInfo;
 import com.google.android.exoplayer2.source.MediaLoadData;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -355,37 +358,65 @@ public class ListenerMux implements ExoPlayerListener, MediaPlayer.OnPreparedLis
     }
 
     @Override
-    public void onDecoderEnabled(EventTime eventTime, int trackType, DecoderCounters decoderCounters) {
-        if (analyticsListener != null) {
-            analyticsListener.onDecoderEnabled(eventTime, trackType, decoderCounters);
+    public void onAudioEnabled(@NotNull EventTime eventTime, @NotNull DecoderCounters counters) {
+        if (analyticsListener!= null) {
+            analyticsListener.onAudioEnabled(eventTime, counters);
         }
     }
 
     @Override
-    public void onDecoderInitialized(EventTime eventTime, int trackType, String decoderName, long initializationDurationMs) {
-        if (analyticsListener != null) {
-            analyticsListener.onDecoderInitialized(eventTime, trackType, decoderName, initializationDurationMs);
+    public void onVideoEnabled(@NotNull EventTime eventTime, @NotNull DecoderCounters counters) {
+        if (analyticsListener!= null) {
+            analyticsListener.onVideoEnabled(eventTime, counters);
         }
     }
 
     @Override
-    public void onDecoderInputFormatChanged(EventTime eventTime, int trackType, Format format) {
+    public void onAudioDecoderInitialized(EventTime eventTime, String decoderName, long initializationDurationMs) {
         if (analyticsListener != null) {
-            analyticsListener.onDecoderInputFormatChanged(eventTime, trackType, format);
+            analyticsListener.onAudioDecoderInitialized(eventTime, decoderName, initializationDurationMs);
         }
     }
 
     @Override
-    public void onDecoderDisabled(EventTime eventTime, int trackType, DecoderCounters decoderCounters) {
+    public void onVideoDecoderInitialized(EventTime eventTime, String decoderName, long initializationDurationMs) {
         if (analyticsListener != null) {
-            analyticsListener.onDecoderDisabled(eventTime, trackType, decoderCounters);
+            analyticsListener.onVideoDecoderInitialized(eventTime, decoderName, initializationDurationMs);
         }
     }
 
     @Override
-    public void onAudioSessionId(EventTime eventTime, int audioSessionId) {
+    public void onAudioInputFormatChanged(EventTime eventTime, Format format, @Nullable DecoderReuseEvaluation decoderReuseEvaluation) {
         if (analyticsListener != null) {
-            analyticsListener.onAudioSessionId(eventTime, audioSessionId);
+            analyticsListener.onAudioInputFormatChanged(eventTime, format, decoderReuseEvaluation);
+        }
+    }
+
+    @Override
+    public void onVideoInputFormatChanged(EventTime eventTime, Format format, @Nullable DecoderReuseEvaluation decoderReuseEvaluation) {
+        if (analyticsListener != null) {
+            analyticsListener.onVideoInputFormatChanged(eventTime, format, decoderReuseEvaluation);
+        }
+    }
+
+    @Override
+    public void onAudioDisabled(EventTime eventTime, DecoderCounters counters) {
+        if (analyticsListener != null) {
+            analyticsListener.onAudioDisabled(eventTime, counters);
+        }
+    }
+
+    @Override
+    public void onVideoDisabled(EventTime eventTime, DecoderCounters counters) {
+        if (analyticsListener != null) {
+            analyticsListener.onVideoDisabled(eventTime, counters);
+        }
+    }
+
+    @Override
+    public void onAudioSessionIdChanged(EventTime eventTime, int audioSessionId) {
+        if (analyticsListener != null) {
+            analyticsListener.onAudioSessionIdChanged(eventTime, audioSessionId);
         }
     }
 
