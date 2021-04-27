@@ -16,6 +16,11 @@
         android:theme="@style/AppTheme"
         >
 
+        <meta-data
+            android:name="com.getstream.sdk.chat.BROADCAST_RECEIVER"
+            android:value="io.getstream.chat.android.client.MyReceiver"
+            />
+
         <activity
             android:name="io.getstream.chat.ui.sample.feature.HostActivity"
             android:windowSoftInputMode="adjustResize"

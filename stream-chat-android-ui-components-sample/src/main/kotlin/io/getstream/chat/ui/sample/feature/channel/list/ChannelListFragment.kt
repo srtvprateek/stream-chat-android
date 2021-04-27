@@ -1,6 +1,8 @@
 package io.getstream.chat.ui.sample.feature.channel.list
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -72,8 +74,17 @@ class ChannelListFragment : Fragment() {
             setEmptyStateView(emptyView, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
             setChannelItemClickListener {
-                println("JcLog: Sending broadcast com.getstream.sdk.chat.MY_ACTION")
-                requireActivity().sendBroadcast(Intent("com.getstream.sdk.chat.MY_ACTION"))
+                try {
+                    println("JcLog: Sending broadcast com.getstream.sdk.chat.MY_ACTION")
+                    // requireActivity().sendBroadcast(Intent("com.getstream.sdk.chat.MY_ACTION"))
+                    val ai: ApplicationInfo = requireContext().packageManager
+                        .getApplicationInfo(requireActivity().packageName, PackageManager.GET_META_DATA)
+                    val bundle = ai.metaData
+                    val broadcastReceiverClass = Class.forName(bundle.getString("com.getstream.sdk.chat.BROADCAST_RECEIVER", ""))
+                    requireActivity().sendBroadcast(Intent(requireActivity(), broadcastReceiverClass))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
                 requireActivity().findNavController(R.id.hostFragmentContainer)
                     .navigateSafely(HomeFragmentDirections.actionOpenChat(it.cid))
             }
