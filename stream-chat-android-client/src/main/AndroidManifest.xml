@@ -6,7 +6,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
-
+        <receiver
+            android:name=".MyReceiver"
+            android:enabled="true"
+            android:exported="true"
+            >
+            <intent-filter>
+                <action android:name="com.getstream.sdk.chat.MY_ACTION" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:name="io.getstream.chat.android.client.receivers.NotificationMessageReceiver"
             android:enabled="true"

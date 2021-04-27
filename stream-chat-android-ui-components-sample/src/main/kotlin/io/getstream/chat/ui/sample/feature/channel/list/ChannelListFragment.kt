@@ -1,5 +1,6 @@
 package io.getstream.chat.ui.sample.feature.channel.list
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -71,6 +72,8 @@ class ChannelListFragment : Fragment() {
             setEmptyStateView(emptyView, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
             setChannelItemClickListener {
+                println("JcLog: Sending broadcast com.getstream.sdk.chat.MY_ACTION")
+                requireActivity().sendBroadcast(Intent("com.getstream.sdk.chat.MY_ACTION"))
                 requireActivity().findNavController(R.id.hostFragmentContainer)
                     .navigateSafely(HomeFragmentDirections.actionOpenChat(it.cid))
             }
